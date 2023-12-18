@@ -19,7 +19,7 @@ LOKASI SHELL SCRIPT / KONFIGURASI TIAP NOMOR:
 7. Heiter
 8. Sein, Stark
 9. Sein, Stark
-10. 
+10. Sein, Stark, dll
 
 </br></br>
 
@@ -35,7 +35,7 @@ Semua host / client menggunakan dhcp IP<br>
 # No. 0
 ### Soal
 (A). Tugas pertama, buatlah peta wilayah sesuai berikut ini:<br>
-![Alt text](image.png)
+![Alt text](img/image.png)
 
 Keterangan:	
 - Richter adalah DNS Server
@@ -54,18 +54,18 @@ Keterangan:
 ### Penyelesaian
 **A.**<br>
 Berikut ini adalah topologi yang telah dibuat berdasarkan instruksi soal A-D:
-![Alt text](image-1.png)<br>
+![Alt text](img/image-1.png)<br>
 
 **B.**<br>
 Untuk pembagian subnet nya seperti berikut ini:<br>
-![Alt text](image-4.png)
-![Alt text](image-2.png)<br>
+![Alt text](img/image-4.png)
+![Alt text](img/image-2.png)<br>
 
 Untuk vlsm tree dapat dilihat di bawah ini:<br>
-![Alt text](image-3.png)<br>
+![Alt text](img/image-3.png)<br>
 
 Dan berikut ini adalah pembagian ip yang diperoleh dari tree yang telah dibuat (sudah tertera pada poin A):<br>
-![Alt text](image-5.png)
+![Alt text](img/image-5.png)
 
 **C.**<br>
 Penjelasan tata cara routing dapat dilihat dari lapres saya di [Lapres Modul 4](https://github.com/duevanofairuz/Jarkom-Modul-4-D27-2023). Untuk konfigurasi routing nya akan menjadi seperti ini:
@@ -187,16 +187,16 @@ service isc-dhcp-relay restart
 
 ### Output
 Berikut ini adalah contoh output bahwa setiap host sudah bisa menerima IP secara dinamis:<br>
-![Alt text](image-6.png)<br>
-![Alt text](image-7.png)<br>
-![Alt text](image-8.png)<br>
-![Alt text](image-9.png)<br>
+![Alt text](img/image-6.png)<br>
+![Alt text](img/image-7.png)<br>
+![Alt text](img/image-8.png)<br>
+![Alt text](img/image-9.png)<br>
 
 Dan berikut ini adalah bukti bahwa routing dan subnetting telah berjalan dengan baik:
-![Alt text](image-10.png)<br>
-![Alt text](image-11.png)<br>
-![Alt text](image-12.png)<br>
-![Alt text](image-13.png)<br>
+![Alt text](img/image-10.png)<br>
+![Alt text](img/image-11.png)<br>
+![Alt text](img/image-12.png)<br>
+![Alt text](img/image-13.png)<br>
 
 
 
@@ -230,9 +230,9 @@ iptables -t nat -A POSTROUTING -o eth0 -j SNAT --to-source 192.168.122.2 -s 10.3
 
 ### Output
 Berikut ini adalah contoh output dari beberapa node terjauh di topologi:
-![Alt text](image-14.png)<br>
-![Alt text](image-15.png)<br>
-![Alt text](image-16.png)<br>
+![Alt text](img/image-14.png)<br>
+![Alt text](img/image-15.png)<br>
+![Alt text](img/image-16.png)<br>
 
 
 
@@ -273,13 +273,13 @@ iptables -A INPUT -p udp -j DROP
 Untuk pengetesan bisa dilakukan dengan cara <br>
 (1) membuka netcat dengan command `nc -lvp [port]` di GrobeForest, dan `nc [ipGrobe] [port]` di node yang ingin mengakses grobe.<br> (2) atau bisa juga dengan cara `nc -lvp [port]` di GrobeForest dan `nmap -p [port] [ipgrobe]` di node yang ingin mengakses.<br>
 disini saya akan mencontohkan menggunakan cara kedua:
-![Alt text](image-17.png)<br>
-![Alt text](image-18.png)<br>
+![Alt text](img/image-17.png)<br>
+![Alt text](img/image-18.png)<br>
 * bisa dilihat, contoh di atas adalah ketika menggunakan koneksi tcp dengan port 80
 * di node pengetes mendapat pesan state `filtered` yang mana menandakan firewall berhasil melakukan block
 
-![Alt text](image-19.png)<br>
-![Alt text](image-20.png)<br>
+![Alt text](img/image-19.png)<br>
+![Alt text](img/image-20.png)<br>
 * bisa dilihat, contoh di atas adalah ketika menggunakan koneksi tcp dengan port 8080
 * di node pengetes mendapat pesan state `open` yang mana menandakan firewall berhasil melakukan filtering
 
@@ -315,11 +315,11 @@ iptables -A INPUT -p icmp -m connlimit --connlimit-above 4 --connlimit-mask 0 -j
 
 ### Output
 Berikut ini adalah contoh output menggunakan cara ping:
-![Alt text](image-21.png)
-![Alt text](image-22.png)
-![Alt text](image-23.png)
-![Alt text](image-24.png)<br>
-![Alt text](image-25.png)<br>
+![Alt text](img/image-21.png)
+![Alt text](img/image-22.png)
+![Alt text](img/image-23.png)
+![Alt text](img/image-24.png)<br>
+![Alt text](img/image-25.png)<br>
 * dapat dilihat bahwa node keempat yang melakukan ping akan otomatis di drop dan tidak mendapatkan balasan dari `revolte`
 
 ### Kendala:
@@ -347,9 +347,9 @@ iptables -A INPUT -p tcp --dport 22 -j DROP
 
 ### Output
 pengetesan dilakukan dengan cara `nc -lvp [port]` di Sein / Stark dan `nmap -p [port] [ip]` di node yang ingin mengakses
-![Alt text](image-26.png)<br>
-![Alt text](image-27.png)<br>
-![Alt text](image-28.png)<br>
+![Alt text](img/image-26.png)<br>
+![Alt text](img/image-27.png)<br>
+![Alt text](img/image-28.png)<br>
 * dapat dilihat bahwa grobeforest bisa melakukan akses sedangkan turkregion tidak
 
 ### Kendala:
@@ -381,9 +381,9 @@ iptables -A INPUT -p tcp --dport 22 -j DROP
 
 ### Output
 Pengetesan juga bisa dilakukan dengan nmap seperti sebelumnya:
-![Alt text](image-29.png)<br>
-![Alt text](image-30.png)<br>
-![Alt text](image-31.png)<br>
+![Alt text](img/image-29.png)<br>
+![Alt text](img/image-30.png)<br>
+![Alt text](img/image-31.png)<br>
 
 ### Kendala:
 
@@ -417,10 +417,10 @@ iptables -A INPUT -p tcp --dport 22 -j DROP
 
 ### Output
 Pengetesan juga dilakukan menggunakan nmap
-![Alt text](image-32.png)<br>
-![Alt text](image-33.png)<br>
-![Alt text](image-34.png)<br>
-![Alt text](image-35.png)<br>
+![Alt text](img/image-32.png)<br>
+![Alt text](img/image-33.png)<br>
+![Alt text](img/image-34.png)<br>
+![Alt text](img/image-35.png)<br>
 
 
 ### Kendala:
@@ -464,7 +464,7 @@ iptables -A PREROUTING -t nat -p tcp --dport 443 -d 10.35.14.138 -j DNAT --to-de
 * mengarahkan (DNAT) lalu lintas TCP dengan tujuan port 443 ke host 10.35.11.254 jika bukan setiap kedua paket.
 
 ### Output
-![Alt text](image-36.png)<br>
+![Alt text](img/image-36.png)<br>
 
 pengetesan bisa dilakukan melalui node `turkregion` dan `heiter` dengan cara berikut:
 **port 80**<br>
@@ -472,18 +472,18 @@ pengetesan bisa dilakukan melalui node `turkregion` dan `heiter` dengan cara ber
 * node stark: `while true; do nc -l -p 80 -c 'echo "halo dari stark"'; done`
 * node pengakses: nc [ip] 80
 
-![Alt text](image-37.png)<br>
-![Alt text](image-38.png)<br>
-![Alt text](image-39.png)<br>
+![Alt text](img/image-37.png)<br>
+![Alt text](img/image-38.png)<br>
+![Alt text](img/image-39.png)<br>
 
 **port 443**<br>
 * node sein: `while true; do nc -l -p 443 -c 'echo "halo dari sein"'; done`
 * node stark: `while true; do nc -l -p 443 -c 'echo "halo dari stark"'; done`
 * node pengakses: nc [ip] 443
 
-![Alt text](image-40.png)<br>
-![Alt text](image-41.png)<br>
-![Alt text](image-42.png)<br>
+![Alt text](img/image-40.png)<br>
+![Alt text](img/image-41.png)<br>
+![Alt text](img/image-42.png)<br>
 
 ### Kendala:
 * kesulitan mengetahui cara pengetesan
@@ -521,9 +521,9 @@ iptables -A INPUT -p tcp --dport 22 -j DROP
 
 ### Output
 Pengetesan dilakukan menggunakan nmap seperti sebelumnya dan akses-nya dilakukan dari revolte menggunakan port 80
-![Alt text](image-43.png)<br>
-![Alt text](image-44.png)<br>
-![Alt text](image-45.png)<br>
+![Alt text](img/image-43.png)<br>
+![Alt text](img/image-44.png)<br>
+![Alt text](img/image-45.png)<br>
 
 
 ### Kendala:
@@ -569,9 +569,9 @@ iptables -A FORWARD -m recent --name portscan --set -j ACCEPT
 
 ### Output
 pengetesan bisa dilakukan dengan cara ping ke web server melalui node mana saja.
-![Alt text](image-46.png)<br>
-![Alt text](image-47.png)<br>
-![Alt text](image-48.png)<br>
+![Alt text](img/image-46.png)<br>
+![Alt text](img/image-47.png)<br>
+![Alt text](img/image-48.png)<br>
 
 ### Kendala:
 * kesulitan dalam mengetahui cara tes nya
@@ -608,7 +608,7 @@ echo 'kern.warning      /var/log/iptables.log ' >> /etc/rsyslog.conf
 * restart layanan rsyslog untuk menerapkan konfigurasi baru.
 
 ### Output
-![Alt text](image-49.png)<br>
+![Alt text](img/image-49.png)<br>
 
 ### Kendala:
 * log
