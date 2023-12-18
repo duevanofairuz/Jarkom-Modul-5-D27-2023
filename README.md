@@ -17,8 +17,8 @@ LOKASI SHELL SCRIPT / KONFIGURASI TIAP NOMOR:
 5. Sein, Stark
 6. Sein, Stark
 7. Heiter
-8. 
-9.
+8. Sein, Stark
+9. Sein, Stark
 10. 
 
 </br></br>
@@ -486,6 +486,7 @@ pengetesan bisa dilakukan melalui node `turkregion` dan `heiter` dengan cara ber
 ![Alt text](image-42.png)<br>
 
 ### Kendala:
+* kesulitan mengetahui cara pengetesan
 
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 8
@@ -530,27 +531,85 @@ Pengetesan dilakukan menggunakan nmap seperti sebelumnya dan akses-nya dilakukan
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 9
 ### Soal
-
+Sadar akan adanya potensial saling serang antar kubu politik, maka WebServer harus dapat secara otomatis memblokir  alamat IP yang melakukan scanning port dalam jumlah banyak (maksimal 20 scan port) di dalam selang waktu 10 menit. 
+(clue: test dengan nmap)
 
 ### Penyelesaian
+Berikut ini adalah script di webserver untuk memblock port scanning yang melebihi 20x dalam interval 10 menit:
+```sh
+#!/bin/bash
 
+iptables -N portscan
+
+iptables -A INPUT -m recent --name portscan --update --seconds 600 --hitcount 20 -j DROP
+iptables -A FORWARD -m recent --name portscan --update --seconds 600 --hitcount 20 -j DROP
+
+iptables -A INPUT -m recent --name portscan --set -j ACCEPT
+iptables -A FORWARD -m recent --name portscan --set -j ACCEPT
+```
+`iptables -N portscan`
+* membuat chain baru bernama "portscan" untuk mengorganisir aturan terkait deteksi port scanning.
+
+`iptables -A INPUT -m recent --name portscan --update --seconds 600 --hitcount 20 -j DROP`
+* menambahkan aturan pada chain INPUT.
+* menggunakan modul recent untuk mendeteksi port scanning:
+* --name portscan: Menentukan nama list yang digunakan untuk menyimpan informasi recent.
+* --update --seconds 600 --hitcount 20: Menolak koneksi jika terdapat 20 koneksi dalam waktu 600 detik.
+* -j DROP: Menolak (drop) koneksi jika deteksi port scanning terpenuhi.
+
+`iptables -A FORWARD -m recent --name portscan --update --seconds 600 --hitcount 20 -j DROP`
+* menambahkan aturan pada chain FORWARD dengan konfigurasi serupa untuk deteksi port scanning pada lalu lintas yang diteruskan.
+
+`iptables -A INPUT -m recent --name portscan --set -j ACCEPT`
+* menambahkan aturan pada chain INPUT.
+* menandai koneksi sebagai bukan port scanning, memungkinkan koneksi lanjut.
+
+`iptables -A FORWARD -m recent --name portscan --set -j ACCEPT`
+* menambahkan aturan pada chain FORWARD dengan konfigurasi serupa untuk menandai koneksi sebagai bukan port scanning pada lalu lintas yang diteruskan.
 
 ### Output
-
+pengetesan bisa dilakukan dengan cara ping ke web server melalui node mana saja.
+![Alt text](image-46.png)<br>
+![Alt text](image-47.png)<br>
+![Alt text](image-48.png)<br>
 
 ### Kendala:
+* kesulitan dalam mengetahui cara tes nya
 
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 10
 ### Soal
-
+Karena kepala suku ingin tau paket apa saja yang di-drop, maka di setiap node server dan router ditambahkan logging paket yang di-drop dengan standard syslog level.
 
 ### Penyelesaian
+Berikut ini adalah script yang bisa dijalankan oleh node mana saja untuk melakukan logging:
+```sh
+#!/bin/bash
 
+touch /var/log/iptables.log
+
+iptables -N LOGGING
+iptables -A INPUT -j LOGGING
+iptables -A OUTPUT -j LOGGING
+iptables -A LOGGING -m limit --limit 2/min -j LOG --log-prefix "IPTables-Dropped: " --log-level 4
+iptables -A INPUT -j LOG --log-prefix "Paket didrop" --log-level 4
+
+echo 'kern.warning      /var/log/iptables.log ' >> /etc/rsyslog.conf
+/etc/init.d/rsyslog restart
+```
+* membuat berkas log iptables di /var/log/iptables.log.
+* membuat chain baru bernama "LOGGING" untuk mengatur aturan log.
+* menambahkan aturan pada chain INPUT dan OUTPUT untuk mengarahkan semua paket ke chain LOGGING.
+* menambahkan aturan pada chain LOGGING.
+* menggunakan modul limit untuk membatasi log menjadi 2 pesan per menit.
+* merekam log dengan prefix "IPTables-Dropped: " ke level log 4.
+* menambahkan aturan pada chain INPUT untuk langsung log pesan dengan prefix "Paket didrop" ke level log 4.
+* menambahkan konfigurasi pada file /etc/rsyslog.conf untuk merekam pesan log iptables ke berkas log /var/log/iptables.log.
+* restart layanan rsyslog untuk menerapkan konfigurasi baru.
 
 ### Output
-
+![Alt text](image-49.png)<br>
 
 ### Kendala:
-
+* log
 ----------------------------------------------------------------------------------------------------------------------------------
