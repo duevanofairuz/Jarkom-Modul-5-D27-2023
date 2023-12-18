@@ -13,10 +13,10 @@ LOKASI SHELL SCRIPT / KONFIGURASI TIAP NOMOR:
 1. Aura
 2. GrobeForest
 3. Revolte, Richter
-4. 
-5. 
-6. 
-7.
+4. Sein, Stark
+5. Sein, Stark
+6. Sein, Stark
+7. Heiter
 8. 
 9.
 10. 
@@ -329,38 +329,98 @@ Berikut ini adalah contoh output menggunakan cara ping:
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 4
 ### Soal
-
+Lakukan pembatasan sehingga koneksi SSH pada Web Server hanya dapat dilakukan oleh masyarakat yang berada pada GrobeForest.
 
 ### Penyelesaian
+Berikut ini adalah script yang digunakan untuk menerapkan firewall di node Web Server yakni Sein dan Stark:
+```sh
+#!/bin/bash
 
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j DROP
+```
+* menambahkan aturan pada chain INPUT.
+* mengizinkan paket TCP dengan tujuan port 22 (SSH).
+* hanya mengizinkan koneksi SSH dari rentang alamat IP 10.35.8.2 hingga 10.35.11.253 (ip range subnet grobeforest).
+* menambahkan aturan pada chain INPUT.
+* menolak (drop) semua paket TCP dengan tujuan port 22 yang tidak sesuai dengan aturan sebelumnya.
 
 ### Output
-
+pengetesan dilakukan dengan cara `nc -lvp [port]` di Sein / Stark dan `nmap -p [port] [ip]` di node yang ingin mengakses
+![Alt text](image-26.png)<br>
+![Alt text](image-27.png)<br>
+![Alt text](image-28.png)<br>
+* dapat dilihat bahwa grobeforest bisa melakukan akses sedangkan turkregion tidak
 
 ### Kendala:
 
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 5
 ### Soal
-
+Selain itu, akses menuju WebServer hanya diperbolehkan saat jam kerja yaitu Senin-Jumat pada pukul 08.00-16.00.
 
 ### Penyelesaian
+Berikut ini adalah script yang berisi rules untuk mengatur akses pada jam tertentu di webserver (sein & stark):
+```sh
+#!/bin/bash
 
+iptables -F
+
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 08:00 --timestop 16:00 --weekdays Mon,Tue,Wed,Thu,Fri -j ACCEPT
+
+iptables -A INPUT -p tcp --dport 22 -j DROP
+```
+* membersihkan (flush) semua aturan yang ada pada iptables.
+* menambahkan aturan pada chain INPUT.
+* mengizinkan paket TCP dengan tujuan port 22 (SSH).
+* hanya mengizinkan koneksi SSH dari rentang alamat IP 10.35.8.2 hingga 10.35.11.253.
+* menerapkan batasan waktu pada aturan: izinkan hanya pada hari Senin hingga Jumat dari pukul 08:00 hingga 16:00.
+* menambahkan aturan pada chain INPUT.
+* menolak (drop) semua paket TCP dengan tujuan port 22 yang tidak sesuai dengan aturan sebelumnya.
+* script ini melakukan overwrite dari script di nomor 4 jadi saya lakukan flush lalu concatenate filter baru nya
 
 ### Output
-
+Pengetesan juga bisa dilakukan dengan nmap seperti sebelumnya:
+![Alt text](image-29.png)<br>
+![Alt text](image-30.png)<br>
+![Alt text](image-31.png)<br>
 
 ### Kendala:
 
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 6
 ### Soal
-
+Lalu, karena ternyata terdapat beberapa waktu di mana network administrator dari WebServer tidak bisa stand by, sehingga perlu ditambahkan rule bahwa akses pada hari Senin - Kamis pada jam 12.00 - 13.00 dilarang (istirahat maksi cuy) dan akses di hari Jumat pada jam 11.00 - 13.00 juga dilarang (maklum, Jumatan rek).
 
 ### Penyelesaian
+Sama seperti sebelumnya, saya juga melakukan overwrite dan concatenate dari script yang ada di nomor 5, ini dilakukan agar konfig firewall sebelumnya tetap bekerja. Berikut ini adalah script yang digunakan untuk menerapkan rules di web server (sein & stark):
+```sh
+#!/bin/bash
 
+iptables -F
+
+#drop di jam 12-13 mon-thu
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 12:00 --timestop 13:00 --weekdays Mon,Tue,Wed,Thu -j DROP
+
+#drop di jam 11-13 fri
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 11:00 --timestop 13:00 --weekdays Fri -j DROP
+
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 08:00 --timestop 16:00 --weekdays Mon,Tue,Wed,Thu,Fri -j ACCEPT
+
+iptables -A INPUT -p tcp --dport 22 -j DROP
+```
+* menambahkan aturan pada chain INPUT.
+* menolak (drop) koneksi SSH pada port 22 dari rentang alamat IP 10.35.8.2 hingga 10.35.11.253 pada hari Senin hingga Kamis antara pukul 12:00 hingga 13:00.
+* menambahkan aturan pada chain INPUT.
+* menolak (drop) koneksi SSH pada port 22 dari rentang alamat IP 10.35.8.2 hingga 10.35.11.253 pada hari Jumat antara pukul 11:00 hingga 13:00.
+* sisa script sama seperti sebelumnya
 
 ### Output
+Pengetesan juga dilakukan menggunakan nmap
+![Alt text](image-32.png)<br>
+![Alt text](image-33.png)<br>
+![Alt text](image-34.png)<br>
+![Alt text](image-35.png)<br>
 
 
 ### Kendala:
@@ -368,25 +428,101 @@ Berikut ini adalah contoh output menggunakan cara ping:
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 7
 ### Soal
-
+Karena terdapat 2 WebServer, kalian diminta agar setiap client yang mengakses Sein dengan Port 80 akan didistribusikan secara bergantian pada Sein dan Stark secara berurutan dan request dari client yang mengakses Stark dengan port 443 akan didistribusikan secara bergantian pada Sein dan Stark secara berurutan.
 
 ### Penyelesaian
+Berikut ini adalah script yang digunakan oleh router penengah sein dan stark yaitu heiter:
+```sh
+#!/bin/bash
 
+#iptables -A PREROUTING -t nat -p tcp --dport 80 -d 10.35.11.254 -m statistic --mode nth --every 2 --packet 0 -j DNAT --to-destination 10.35.14.138:80
+#iptables -A PREROUTING -t nat -p tcp --dport 80 -d 10.32.11.254 -m statistic --mode nth --every 1 --packet 0 -j DNAT --to-destination 10.35.11.254:80
+
+iptables -A PREROUTING -t nat -p tcp --dport 80 -d 10.35.11.254 -m statistic --mode nth --every 2 --packet 0 -j DNAT --to-destination 10.35.11.254
+
+iptables -A PREROUTING -t nat -p tcp --dport 80 -d 10.35.11.254 -j DNAT --to-destination 10.35.14.138
+
+iptables -A PREROUTING -t nat -p tcp --dport 443 -d 10.35.14.138 -m statistic --mode nth --every 2 --packet 0 -j DNAT --to-destination 10.35.14.138
+
+iptables -A PREROUTING -t nat -p tcp --dport 443 -d 10.35.14.138 -j DNAT --to-destination 10.35.11.254
+```
+`iptables -A PREROUTING -t nat -p tcp --dport 80 -d 10.35.11.254 -m statistic --mode nth --every 2 --packet 0 -j DNAT --to-destination 10.35.11.254`
+* menambahkan aturan pada chain PREROUTING di tabel nat.
+* mengarahkan (DNAT) lalu lintas TCP dengan tujuan port 80 ke host 10.35.11.254.
+* menggunakan statistik untuk menerapkan modus nth, mengarahkan setiap kedua paket (every 2).
+
+`iptables -A PREROUTING -t nat -p tcp --dport 80 -d 10.35.11.254 -j DNAT --to-destination 10.35.14.138`
+* menambahkan aturan pada chain PREROUTING di tabel nat.
+* mengarahkan (DNAT) lalu lintas TCP dengan tujuan port 80 ke host 10.35.14.138 jika bukan setiap kedua paket.
+
+`iptables -A PREROUTING -t nat -p tcp --dport 443 -d 10.35.14.138 -m statistic --mode nth --every 2 --packet 0 -j DNAT --to-destination 10.35.14.138`
+* menambahkan aturan pada chain PREROUTING di tabel nat.
+* mengarahkan (DNAT) lalu lintas TCP dengan tujuan port 443 ke host 10.35.14.138 hanya pada setiap kedua paket.
+
+`iptables -A PREROUTING -t nat -p tcp --dport 443 -d 10.35.14.138 -j DNAT --to-destination 10.35.11.254`
+* menambahkan aturan pada chain PREROUTING di tabel nat.
+* mengarahkan (DNAT) lalu lintas TCP dengan tujuan port 443 ke host 10.35.11.254 jika bukan setiap kedua paket.
 
 ### Output
+![Alt text](image-36.png)<br>
 
+pengetesan bisa dilakukan melalui node `turkregion` dan `heiter` dengan cara berikut:
+**port 80**<br>
+* node sein: `while true; do nc -l -p 80 -c 'echo "halo dari sein"'; done`
+* node stark: `while true; do nc -l -p 80 -c 'echo "halo dari stark"'; done`
+* node pengakses: nc [ip] 80
+
+![Alt text](image-37.png)<br>
+![Alt text](image-38.png)<br>
+![Alt text](image-39.png)<br>
+
+**port 443**<br>
+* node sein: `while true; do nc -l -p 443 -c 'echo "halo dari sein"'; done`
+* node stark: `while true; do nc -l -p 443 -c 'echo "halo dari stark"'; done`
+* node pengakses: nc [ip] 443
+
+![Alt text](image-40.png)<br>
+![Alt text](image-41.png)<br>
+![Alt text](image-42.png)<br>
 
 ### Kendala:
 
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 8
 ### Soal
-
+Karena berbeda koalisi politik, maka subnet dengan masyarakat yang berada pada Revolte dilarang keras mengakses WebServer hingga masa pencoblosan pemilu kepala suku 2024 berakhir. Masa pemilu (hingga pemungutan dan penghitungan suara selesai) kepala suku bersamaan dengan masa pemilu Presiden dan Wakil Presiden Indonesia 2024.
 
 ### Penyelesaian
+Berikut ini adalah script dari web server:
+```sh
+#!/bin/bash
+
+iptables -F
+
+#drop di jam 12-13 mon-thu
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 12:00 --timestop 13:00 --weekdays Mon,Tue,Wed,Thu -j DROP
+
+#drop di jam 11-13 fri
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 11:00 --timestop 13:00 --weekdays Fri -j DROP
+
+#drop revolte di masa pemilu
+iptables -A INPUT -p tcp --dport 80 -s 10.35.14.150 -m time --datestart 2023-10-19T00:00:00 --datestop 2024-02-15T23:59:59 -j DROP
+
+iptables -A INPUT -p tcp --dport 22 -m iprange --src-range 10.35.8.2-10.35.11.253 -m time --timestart 08:00 --timestop 16:00 --weekdays Mon,Tue,Wed,Thu,Fri -j ACCEPT
+
+iptables -A INPUT -p tcp --dport 22 -j DROP
+```
+* disini saya mengambil tanggal habis masa pemilu pada tanggal 15 Februari 2024 yang mana menunjukkan selesainya fase pemungutan dan perhitungan suara.
+* menambahkan aturan pada chain INPUT di tabel filter.
+* menolak (DROP) koneksi TCP dengan tujuan port 80 dari sumber IP 10.35.14.150.
+* menggunakan modul waktu (-m time) untuk menerapkan aturan hanya pada periode mulai dari tanggal 19 Oktober 2023 pukul 00:00:00 hingga tanggal 15 Februari 2024 pukul 23:59:59.
 
 
 ### Output
+Pengetesan dilakukan menggunakan nmap seperti sebelumnya dan akses-nya dilakukan dari revolte menggunakan port 80
+![Alt text](image-43.png)<br>
+![Alt text](image-44.png)<br>
+![Alt text](image-45.png)<br>
 
 
 ### Kendala:
